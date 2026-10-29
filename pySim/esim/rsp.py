@@ -17,6 +17,7 @@
 
 
 from typing import Optional
+import functools
 import shelve
 
 from cryptography.hazmat.primitives.asymmetric import ec
@@ -25,9 +26,17 @@ from cryptography import x509
 from osmocom.utils import b2h
 from osmocom.tlv import bertlv_parse_one_rawtag, bertlv_return_one_rawtlv
 
-from pySim.esim import compile_asn1_subdir
+from pySim.esim import compile_asn1_subdir, compile_asn1_paths
 
+# SGP.22 v2 RSPDefinitions, used by all RSP code in pySim
 asn1 = compile_asn1_subdir('rsp')
+
+@functools.lru_cache(maxsize=None)
+def asn1_v3():
+    """Return the SGP.22 v3.1 RSPDefinitions module (Annex H), compiled on first use.
+    v3.1 renames and drops members of the v2 types, so it is kept apart from 'asn1';
+    it imports UICCCapability from the SAIP module."""
+    return compile_asn1_paths(['rsp/PKIX1Explicit88.asn', 'rsp/PKIX1Implicit88.asn', 'saip', 'rsp_v3'])
 
 class RspSessionState:
     """Encapsulates the state of a RSP session.  It is created during the initiateAuthentication
