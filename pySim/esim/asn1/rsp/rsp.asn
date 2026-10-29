@@ -28,7 +28,10 @@ GetEuiccInfo1Request ::= [32] SEQUENCE { -- Tag 'BF20'
 EUICCInfo1 ::= [32] SEQUENCE { -- Tag 'BF20'
     svn [2] VersionType,    -- GSMA SGP.22 version supported (SVN)
     euiccCiPKIdListForVerification [9] SEQUENCE OF SubjectKeyIdentifier, -- List of CI Public Key Identifiers supported on the eUICC for signature verification
-    euiccCiPKIdListForSigning [10] SEQUENCE OF SubjectKeyIdentifier -- List of CI Public Key Identifier supported on the eUICC for signature creation
+    euiccCiPKIdListForSigning [10] SEQUENCE OF SubjectKeyIdentifier, -- List of CI Public Key Identifier supported on the eUICC for signature creation
+    euiccCiPKIdListForSigningV3 [17] SEQUENCE OF SubjectKeyIdentifier OPTIONAL, -- #SupportedFromV3.0.0# List of eSIM CA RootCA Public Key Identifiers supported on the eUICC for signature creation that can be verified by a certificate chain according to Variant Ov3, A, B or C.
+    euiccRspCapability [8] RspCapability OPTIONAL, -- #MandatoryFromV3.0.0# EuiccRspCapability in SGP.22 v3
+    highestSvn [19] VersionType OPTIONAL -- #SupportedFromV3.0.0#
 }
  
 -- Definition of EUICCInfo2 --------------------------
@@ -55,9 +58,21 @@ EUICCInfo2 ::= [34] SEQUENCE { -- Tag 'BF22'
     forbiddenProfilePolicyRules [25] PprIds OPTIONAL, -- Tag '99'
     ppVersion VersionType, -- Protection Profile version
     sasAcreditationNumber UTF8String (SIZE(0..64)),
-    certificationDataObject [12] CertificationDataObject OPTIONAL
+    certificationDataObject [12] CertificationDataObject OPTIONAL,
+    treProperties [13] BIT STRING {
+        isDiscrete(0),
+        isIntegrated(1),
+        usesRemoteMemory(2) -- refers to the usage of remote memory protected by the Remote Memory Protection Function described in SGP.21 [4]
+    } OPTIONAL, -- #Mandatory for Integrated eUICC
+    treProductReference [14] UTF8String OPTIONAL, -- Platform_Label as defined in GlobalPlatform DLOA specification [57]
+    additionalProfilePackageVersions [15] SEQUENCE OF VersionType OPTIONAL, -- #SupportedFromV3.0.0#
+    lpaMode [16] LpaMode OPTIONAL, -- #MandatoryFromV3.0.0# active LPA
+    euiccCiPKIdListForSigningV3 [17] SEQUENCE OF SubjectKeyIdentifier OPTIONAL, -- #SupportedFromV3.0.0# List of eSIM CA RootCA Public Key Identifiers supported on the eUICC for signature creation that can be verified by a certificate chain according to Variant Ov3, A, B or C.
+    additionalEuiccInfo [18] OCTET STRING (SIZE(0..32)) OPTIONAL, -- #SupportedFromV3.0.0# EUM specific eUICC information
+    highestSvn [19] VersionType OPTIONAL, -- #SupportedFromV3.0.0#
+    iotSpecificInfo [20] IoTSpecificInfo OPTIONAL -- reserved for SGP.32 [97]
 }
- 
+
 -- Definition of RspCapability
 RspCapability ::= BIT STRING {
     additionalProfile(0), -- at least one more Profile can be installed
@@ -65,7 +80,17 @@ RspCapability ::= BIT STRING {
     rpmSupport(2), -- Remote Profile Management
     testProfileSupport (3) -- support for test profile
 }
- 
+
+-- Definition of LpaMode
+LpaMode ::= INTEGER {
+    lpad (0), -- LPAd is active
+    lpae (1) -- LPAe is active
+}
+
+-- Definition of IoTSpecificInfo
+IoTSpecificInfo ::= SEQUENCE {
+}
+
 -- Definition of CertificationDataObject
 CertificationDataObject ::= SEQUENCE {
     platformLabel UTF8String,   -- Platform_Label as defined in GlobalPlatform DLOA specification [57]
