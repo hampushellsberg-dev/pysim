@@ -47,6 +47,15 @@ class SaipTest(unittest.TestCase):
                 self.assertEqual(reenc_tlv, first_tlv)
 
 
+    def test_sd_key_access_and_counter(self):
+        """Test that keyAccess and keyCounterValue of a security domain key survive a re-encode."""
+        decoded = copy.deepcopy(self.pes.get_pe_for_type('securityDomain').decoded)
+        decoded['keyList'][0]['keyAccess'] = b'\x01'
+        decoded['keyList'][0]['keyCounterValue'] = b'\x00\x00\x01'
+        der = asn1.encode('ProfileElement', ('securityDomain', decoded))
+        pe = ProfileElement.from_der(der)
+        self.assertEqual(pe.to_der(), der)
+
     def test_sequence_helpers(self):
         """Verify that the convenience helpers worked as expected."""
         self.assertEqual([x.type for x in self.pes.pe_list], self.expected_pet_list)
