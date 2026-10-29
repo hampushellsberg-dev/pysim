@@ -199,6 +199,10 @@ OperatorID ::= SEQUENCE {
     gid2 OCTET STRING OPTIONAL -- referring to content of EF GID2 (file identifier '6F3F') as defined in 3GPP TS 31.102 [54]
 }
  
+-- The same type as spelled in SGP.22 v3.1 Annex H, and imported under that name from this
+-- module by the SGP.32 v1.3 ASN.1 module (IMPORTS ... OperatorId ... FROM RSPDefinitions)
+OperatorId ::= OperatorID
+
 ProfileInfoListError ::= INTEGER {incorrectInputValues(1), undefinedError(127)}
  
 -- Definition of StoreMetadata request

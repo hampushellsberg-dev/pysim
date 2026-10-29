@@ -209,5 +209,30 @@ class TestRspV3Module(unittest.TestCase):
         self.assertEqual(dec['operationType'], (h2b('80'), 1))
 
 
+class TestOperatorIdName(unittest.TestCase):
+    """SGP.22 v3.1 and the SGP.32 v1.3 module, which imports it from RSPDefinitions, spell
+    the type OperatorId; the v2 module calls it OperatorID."""
+
+    OWNER = {'mccMnc': h2b('00f110'), 'gid1': h2b('01')}
+
+    def test_alias_encodes_like_operator_id(self):
+        enc = rsp.asn1.encode('OperatorId', self.OWNER)
+        self.assertEqual(enc, rsp.asn1.encode('OperatorID', self.OWNER))
+        self.assertEqual(rsp.asn1.decode('OperatorId', enc), self.OWNER)
+
+    def test_importable_under_the_v3_name(self):
+        from importlib import resources
+        rsp_dir = resources.files('pySim.esim').joinpath('asn1').joinpath('rsp')
+        rsp_txt = '\n'.join(i.read_text() for i in rsp_dir.iterdir() if i.name.endswith('.asn'))
+        importer = """Importer DEFINITIONS AUTOMATIC TAGS ::= BEGIN
+IMPORTS OperatorId FROM RSPDefinitions {joint-iso-itu-t(2) international-organizations(23) gsma(146) rsp(1) asn1modules(1) sgp22v2(2)};
+Owner ::= SEQUENCE { profileOwner [23] OperatorId }
+END
+"""
+        spec = asn1tools.compile_string(rsp_txt + '\n' + importer, codec='der')
+        enc = spec.encode('Owner', {'profileOwner': self.OWNER})
+        self.assertEqual(enc[2:], h2b('b7') + rsp.asn1.encode('OperatorID', self.OWNER)[1:])
+
+
 if __name__ == "__main__":
     unittest.main()
